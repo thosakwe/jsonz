@@ -22,8 +22,6 @@ class TodoSerializer {
       return null;
     }
     var model = new Todo();
-    var parsedText = false;
-    var parsedCompleted = false;
     while (tokens.isNotEmpty) {
       var parsed = false;
       var token = tokens.removeFirst();
@@ -40,7 +38,6 @@ class TodoSerializer {
           token = tokens.removeFirst();
           if (token.valueType == ValueType.STRING) {
             model.text = token.value;
-            parsedText = true;
             parsed = true;
           } else
             throw new FormatException('Expected string, found ' +
@@ -60,7 +57,6 @@ class TodoSerializer {
           token = tokens.removeFirst();
           if (token.valueType == ValueType.BOOL) {
             model.completed = token.value == 'true';
-            parsedCompleted = true;
             parsed = true;
           } else
             throw new FormatException('Expected boolean, found ' +
@@ -68,8 +64,6 @@ class TodoSerializer {
                 ' (' +
                 token.value +
                 ')  instead.');
-        } else {
-          throw new FormatException('Unrecognized key ' + token.value + '.');
         }
         if (parsed) {
           token = tokens.removeFirst();
@@ -90,12 +84,6 @@ class TodoSerializer {
             token.value +
             ')  instead.');
       }
-    }
-    if (!(parsedText)) {
-      throw new FormatException('Missing required key "text".');
-    }
-    if (!(parsedCompleted)) {
-      throw new FormatException('Missing required key "completed".');
     }
     return model;
   }
@@ -117,9 +105,6 @@ class TodoListSerializer {
       return null;
     }
     var model = new TodoList();
-    var parsedVersion = false;
-    var parsedAuthor = false;
-    var parsedTodo = false;
     while (tokens.isNotEmpty) {
       var parsed = false;
       var token = tokens.removeFirst();
@@ -136,7 +121,6 @@ class TodoListSerializer {
           token = tokens.removeFirst();
           if (token.valueType == ValueType.NUMBER) {
             model.version = double.parse(token.value);
-            parsedVersion = true;
             parsed = true;
           } else
             throw new FormatException('Expected double, found ' +
@@ -156,7 +140,6 @@ class TodoListSerializer {
           token = tokens.removeFirst();
           if (token.valueType == ValueType.STRING) {
             model.author = token.value;
-            parsedAuthor = true;
             parsed = true;
           } else
             throw new FormatException('Expected string, found ' +
@@ -176,7 +159,6 @@ class TodoListSerializer {
           var todo = TodoSerializer.parseTokens(tokens);
           if (todo != null) {
             model.todo = todo;
-            parsedTodo = true;
             parsed = true;
           } else
             throw new FormatException('Expected Todo, found ' +
@@ -184,8 +166,6 @@ class TodoListSerializer {
                 ' (' +
                 token.value +
                 ')  instead.');
-        } else {
-          throw new FormatException('Unrecognized key ' + token.value + '.');
         }
         if (parsed) {
           token = tokens.removeFirst();
@@ -206,15 +186,6 @@ class TodoListSerializer {
             token.value +
             ')  instead.');
       }
-    }
-    if (!(parsedVersion)) {
-      throw new FormatException('Missing required key "version".');
-    }
-    if (!(parsedAuthor)) {
-      throw new FormatException('Missing required key "author".');
-    }
-    if (!(parsedTodo)) {
-      throw new FormatException('Missing required key "todo".');
     }
     return model;
   }
