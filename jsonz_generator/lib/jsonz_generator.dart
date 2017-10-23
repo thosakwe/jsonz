@@ -12,10 +12,13 @@ import 'package:recase/recase.dart';
 import 'package:source_gen/source_gen.dart';
 
 class JsonzGenerator extends GeneratorForAnnotation<Serialize> {
+  /// If `true` (default: `false`), then a cache will be used to improve performance.
+  final bool cache;
+
   /// If `true` (default: `false`), then unrecognized keys will be ignored.
   final bool strict;
 
-  JsonzGenerator({this.strict: false});
+  JsonzGenerator({this.cache, this.strict: false});
 
   static ExpressionBuilder tokenType(String type) {
     return new TypeBuilder('TokenType').property(type);
@@ -50,18 +53,20 @@ class JsonzGenerator extends GeneratorForAnnotation<Serialize> {
     clazz.addMethod(generateParseStringMethod(type), asStatic: true);
     clazz.addMethod(generateParseTokensMethod(type), asStatic: true);
 
-    // Add _cache
-    clazz.addField(
-      varField(
-        '_cache',
-        type: new TypeBuilder('Map', genericTypes: [
-          lib$core.String,
-          new TypeBuilder(type.name),
-        ]),
-        value: map({}),
-      ),
-      asStatic: true,
-    );
+    if (cache == true) {
+      // Add _cache
+      clazz.addField(
+        varField(
+          '_cache',
+          type: new TypeBuilder('Map', genericTypes: [
+            lib$core.String,
+            new TypeBuilder(type.name),
+          ]),
+          value: map({}),
+        ),
+        asStatic: true,
+      );
+    }
 
     return clazz;
   }
@@ -85,6 +90,9 @@ class JsonzGenerator extends GeneratorForAnnotation<Serialize> {
     meth.addStatement(
       reference('parseTokens').call([reference('tokens')]).asReturn(),
     );
+
+    if (cache != true)
+      return m;
 
     m.addStatement(reference('_cache').invoke('putIfAbsent', [
       reference('string'),

@@ -10,10 +10,8 @@ class TodoSerializer {
   static Map<String, Todo> _cache = {};
 
   static Todo parseString(String string) {
-    return _cache.putIfAbsent(string, () {
-      var tokens = new JsonLexer(string).tokens;
+    var tokens = new JsonLexer(string).tokens;
       return parseTokens(tokens);
-    });
   }
 
   static Todo parseTokens(Queue<Token> tokens) {
