@@ -49,13 +49,29 @@ class JsonzGenerator extends GeneratorForAnnotation<Serialize> {
     var clazz = new ClassBuilder('${rc.pascalCase}Serializer');
     clazz.addMethod(generateParseStringMethod(type), asStatic: true);
     clazz.addMethod(generateParseTokensMethod(type), asStatic: true);
+
+    // Add _cache
+    clazz.addField(
+      varField(
+        '_cache',
+        type: new TypeBuilder('Map', genericTypes: [
+          lib$core.String,
+          new TypeBuilder(type.name),
+        ]),
+        value: map({}),
+      ),
+      asStatic: true,
+    );
+
     return clazz;
   }
 
   MethodBuilder generateParseStringMethod(InterfaceType type) {
-    var meth = new MethodBuilder('parseString',
+    var m = new MethodBuilder('parseString',
         returnType: new TypeBuilder(type.name));
-    meth.addPositional(parameter('string', [lib$core.String]));
+    m.addPositional(parameter('string', [lib$core.String]));
+
+    var meth = new MethodBuilder.closure();
 
     // var tokens = new JsonLexer('string').tokens;
     meth.addStatement(varField(
@@ -70,7 +86,12 @@ class JsonzGenerator extends GeneratorForAnnotation<Serialize> {
       reference('parseTokens').call([reference('tokens')]).asReturn(),
     );
 
-    return meth;
+    m.addStatement(reference('_cache').invoke('putIfAbsent', [
+      reference('string'),
+      meth,
+    ]).asReturn());
+
+    return m;
   }
 
   MethodBuilder generateParseTokensMethod(InterfaceType type) {
@@ -269,12 +290,11 @@ class JsonzGenerator extends GeneratorForAnnotation<Serialize> {
     ]));
     */
 
-    // Move onto the next token
-    predicate.add(tokens.invoke('removeFirst', []).asAssign(token));
-
     ExpressionBuilder parseCondition;
     List<ValidIfStatementMember> ifParsed;
     String expectedType;
+
+    bool isPrimitive = true;
 
     if (const TypeChecker.fromRuntime(bool).isExactlyType(type)) {
       expectedType = 'boolean';
@@ -330,11 +350,14 @@ class JsonzGenerator extends GeneratorForAnnotation<Serialize> {
           ? 'double'
           : 'number';
       parseCondition = token.property('valueType').equals(valueType('NUMBER'));
+      var numType =
+          expectedType == 'double' ? new TypeBuilder('double') : lib$core.num;
+
       ifParsed = [
-        // model.foo = token.value.asDouble()
-        token
-            .property('value')
-            .invoke('asDouble', []).asAssign(model.property(field.displayName)),
+        // model.foo = num.parse(token.value)
+        numType.invoke('parse', [
+          token.property('value'),
+        ]).asAssign(model.property(field.displayName)),
       ];
     }
 
@@ -351,6 +374,7 @@ class JsonzGenerator extends GeneratorForAnnotation<Serialize> {
     } else {
       // TODO: Lists
       // TODO: Map<String, dynamic> (or even validate the second type?)
+      isPrimitive = false;
 
       // If the field's type is also serializable, invoke its serializer...
       var jsonAnnotation = const TypeChecker.fromRuntime(Serialize)
@@ -382,9 +406,13 @@ class JsonzGenerator extends GeneratorForAnnotation<Serialize> {
                 .asAssign(model.property(field.displayName)),
           ];
         }
-      }
+      } else
+        throw 'Unsupported field type: ${type.displayName}';
+    }
 
-      throw 'Unsupported field type: ${type.displayName}';
+    if (isPrimitive) {
+      // Move onto the next token
+      predicate.add(tokens.invoke('removeFirst', []).asAssign(token));
     }
 
     var ifParsedStmt = ifThen(parseCondition, ifParsed);

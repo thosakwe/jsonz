@@ -9,6 +9,7 @@ environment:
 
 dependencies:
   code_builder: ^1.0.0
+  millisecond: ^0.1.0
   jsonz:
     path: ../jsonz
   recase: ^1.0.0
