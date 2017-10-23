@@ -5,7 +5,7 @@ import 'package:source_gen/source_gen.dart';
 final List<BuildAction> buildActions = [
   new BuildAction(
     new PartBuilder([
-      new JsonzGenerator(),
+      new JsonzGenerator(cache: true),
     ]),
     'jsonz_generator',
     inputs: const [

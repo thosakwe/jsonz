@@ -7,9 +7,13 @@ part of jsonz_generator.example.todo;
 // **************************************************************************
 
 class TodoSerializer {
+  static Map<String, Todo> _cache = {};
+
   static Todo parseString(String string) {
-    var tokens = new JsonLexer(string).tokens;
-    return parseTokens(tokens);
+    return _cache.putIfAbsent(string, () {
+      var tokens = new JsonLexer(string).tokens;
+      return parseTokens(tokens);
+    });
   }
 
   static Todo parseTokens(Queue<Token> tokens) {
@@ -86,9 +90,13 @@ class TodoSerializer {
 }
 
 class TodoListSerializer {
+  static Map<String, TodoList> _cache = {};
+
   static TodoList parseString(String string) {
-    var tokens = new JsonLexer(string).tokens;
-    return parseTokens(tokens);
+    return _cache.putIfAbsent(string, () {
+      var tokens = new JsonLexer(string).tokens;
+      return parseTokens(tokens);
+    });
   }
 
   static TodoList parseTokens(Queue<Token> tokens) {

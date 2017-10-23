@@ -9,7 +9,7 @@ part 'todo.g.dart';
 
 typedef TodoList _JsonCodec(String s);
 
-const int iterations = 10000;
+const int iterations = 100000;
 final String jsonString = JSON.encode({
   'version': 1.0,
   'author': 'Tobe O',
@@ -64,7 +64,7 @@ void main() {
 
   for (var key in averages.keys) {
     var average = averages[key];
-    print('* $key ≈ ' + ms.format(average));
+    print('* $key ≈ ' + average.toString() + 'us');
   }
 }
 
