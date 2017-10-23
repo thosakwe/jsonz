@@ -72,14 +72,15 @@ class JsonzGenerator extends GeneratorForAnnotation<Serialize> {
   }
 
   MethodBuilder generateParseStringMethod(InterfaceType type) {
-    var m = new MethodBuilder('parseString',
+    MethodBuilder targetMethod;
+    var m = targetMethod = new MethodBuilder('parseString',
         returnType: new TypeBuilder(type.name));
     m.addPositional(parameter('string', [lib$core.String]));
 
-    var meth = new MethodBuilder.closure();
+    if (cache == true) targetMethod = new MethodBuilder.closure();
 
     // var tokens = new JsonLexer('string').tokens;
-    meth.addStatement(varField(
+    targetMethod.addStatement(varField(
       'tokens',
       value: new TypeBuilder('JsonLexer').newInstance([
         reference('string'),
@@ -87,16 +88,15 @@ class JsonzGenerator extends GeneratorForAnnotation<Serialize> {
     ));
 
     // return parseTokens(tokens);
-    meth.addStatement(
+    targetMethod.addStatement(
       reference('parseTokens').call([reference('tokens')]).asReturn(),
     );
 
-    if (cache != true)
-      return m;
+    if (cache != true) return targetMethod;
 
     m.addStatement(reference('_cache').invoke('putIfAbsent', [
       reference('string'),
-      meth,
+      targetMethod,
     ]).asReturn());
 
     return m;
