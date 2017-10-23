@@ -169,12 +169,15 @@ class JsonzGenerator extends GeneratorForAnnotation<Serialize> {
 
     // If we parsed something, expect either a "," or "}".
     block.add(ifThen(parsed, [
+      /* pkg:json_lexer always emits an EOF last, so remove this for performance
+      // REF#1
       // if (tokens.isEmpty) { ...}
       ifThen(tokens.property('isEmpty'), [
         lib$core.FormatException.newInstance([
           literal('Premature end-of-file; expected "," or "}".'),
         ]).asThrow(),
       ]),
+      */
 
       // token = tokens.removeFirst();
       tokens.invoke('removeFirst', []).asAssign(token),
@@ -241,12 +244,12 @@ class JsonzGenerator extends GeneratorForAnnotation<Serialize> {
     // Naturally, expect the next token to be a ":".
     //
     // Throw an error otherwise.
-    // if (tokens.isEmpty || tokens.first.type != TokenType.NAME_SEPARATOR) { throw ... }
+    // if (tokens.first.type != TokenType.NAME_SEPARATOR) { throw ... }
     predicate.add(ifThen(
-      tokens.property('isEmpty').or(tokens
+      tokens
           .property('first')
           .property('type')
-          .notEquals(tokenType('NAME_SEPARATOR'))),
+          .notEquals(tokenType('NAME_SEPARATOR')),
       [
         lib$core.FormatException.newInstance([
           expected('":"', tokens.property('first')),
@@ -257,12 +260,14 @@ class JsonzGenerator extends GeneratorForAnnotation<Serialize> {
     // If we found a ":", then move forward!
     predicate.add(tokens.invoke('removeFirst', []));
 
+    /* Removed as optimization: search this for "REF#1" to find the explanation.
     // Check if this is the last token.
     predicate.add(ifThen(tokens.property('isEmpty'), [
       lib$core.FormatException.newInstance([
         literal('Premature end-of-file; expected a value after ":".'),
       ]).asThrow(),
     ]));
+    */
 
     // Move onto the next token
     predicate.add(tokens.invoke('removeFirst', []).asAssign(token));

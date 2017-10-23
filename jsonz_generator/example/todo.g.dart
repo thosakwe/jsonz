@@ -25,7 +25,7 @@ class TodoSerializer {
       var token = tokens.removeFirst();
       if (token.valueType == ValueType.STRING) {
         if (token.value == 'text') {
-          if (tokens.isEmpty || tokens.first.type != TokenType.NAME_SEPARATOR) {
+          if (tokens.first.type != TokenType.NAME_SEPARATOR) {
             throw new FormatException('Expected ":", found ' +
                 tokens.first.type.toString() +
                 ' (' +
@@ -33,10 +33,6 @@ class TodoSerializer {
                 ')  instead.');
           }
           tokens.removeFirst();
-          if (tokens.isEmpty) {
-            throw new FormatException(
-                'Premature end-of-file; expected a value after ":".');
-          }
           token = tokens.removeFirst();
           if (token.valueType == ValueType.STRING) {
             model.text = token.value;
@@ -49,7 +45,7 @@ class TodoSerializer {
                 token.value +
                 ')  instead.');
         } else if (token.value == 'completed') {
-          if (tokens.isEmpty || tokens.first.type != TokenType.NAME_SEPARATOR) {
+          if (tokens.first.type != TokenType.NAME_SEPARATOR) {
             throw new FormatException('Expected ":", found ' +
                 tokens.first.type.toString() +
                 ' (' +
@@ -57,10 +53,6 @@ class TodoSerializer {
                 ')  instead.');
           }
           tokens.removeFirst();
-          if (tokens.isEmpty) {
-            throw new FormatException(
-                'Premature end-of-file; expected a value after ":".');
-          }
           token = tokens.removeFirst();
           if (token.valueType == ValueType.BOOL) {
             model.completed = token.value == 'true';
@@ -76,10 +68,6 @@ class TodoSerializer {
           throw new FormatException('Unrecognized key ' + token.value + '.');
         }
         if (parsed) {
-          if (tokens.isEmpty) {
-            throw new FormatException(
-                'Premature end-of-file; expected "," or "}".');
-          }
           token = tokens.removeFirst();
           if (token.type == TokenType.END_OBJECT) {
             break;
